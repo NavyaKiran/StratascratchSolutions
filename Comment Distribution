@@ -1,0 +1,16 @@
+with cte as (select user_id as user_id, name, joined_at,body, created_at
+from fb_users join fb_comments on fb_users.id = fb_comments.user_id
+where year(joined_at) between '2018' and '2020'
+and year(created_at) = '2020' and month(created_at) = '01'
+and created_at > joined_at),
+
+cte2 as (select user_id, count(user_id) as num_comments 
+from cte 
+group by user_id), 
+
+cte3 as (select distinct num_comments from cte2)
+
+select cte3.num_comments, count(distinct cte2.user_id) 
+from cte3 inner join cte2 on cte3.num_comments = cte2.num_comments 
+group by cte3.num_comments
+order by cte3.num_comments
