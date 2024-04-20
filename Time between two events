@@ -1,0 +1,11 @@
+with cte as (select user_id, page_load_time, scroll_down_time, timestampdiff(second, page_load_time, scroll_down_time) as time_diff 
+from 
+(select a.user_id, a.timestamp as page_load_time, a.action as first_action, b.timestamp as scroll_down_time, b.action 
+from facebook_web_log a inner join facebook_web_log b on a.user_id = b.user_id 
+and a.timestamp < b.timestamp and a.action = 'page_load' and b.action = 'scroll_down') temp)
+
+select user_id, page_load_time, scroll_down_time, time_diff 
+from 
+(select user_id, page_load_time, scroll_down_time, time_diff, rank() over(order by time_diff asc) as rn
+from cte) temp1 
+where rn = 1
