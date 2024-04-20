@@ -1,0 +1,13 @@
+with cte as (select * from fb_eu_energy
+union all 
+select * from fb_na_energy
+union all 
+select * from fb_asia_energy)
+, 
+cte2 as (select date, sum(consumption) as total_energy
+from cte
+group by date)
+
+select date, sum(total_energy) over(order by date) as running_total, 
+round(100*sum(total_energy) over(order by date)/(select sum(total_energy) from cte2)) as pct
+from cte2
