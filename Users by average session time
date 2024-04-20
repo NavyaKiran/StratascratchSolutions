@@ -1,0 +1,11 @@
+select user_id, sum(diff)/count(*) as average 
+from 
+(select user_id, date, timestampdiff(second, page_load_time, page_exit_time) as diff
+from 
+(select user_id, date(timestamp) as date,
+max(case when action = 'page_load' then timestamp end) as page_load_time, 
+min(case when action = 'page_exit' then timestamp end) as page_exit_time 
+from facebook_web_log
+group by 1, 2) temp) temp2
+group by user_id
+having average >= 0
