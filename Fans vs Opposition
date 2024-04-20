@@ -1,0 +1,9 @@
+with popularity_fan as (select employee_id, age, gender, popularity, rank() over(order by popularity desc, employee_id asc) as rn
+from facebook_hack_survey), 
+
+non_fans as (select employee_id, age, gender, popularity, rank() over(order by popularity asc, employee_id asc) as rn
+from facebook_hack_survey)
+
+select concat(popularity_fan.employee_id, ',' ,non_fans.employee_id) as pairs
+from popularity_fan inner join non_fans on popularity_fan.rn = non_fans.rn
+
