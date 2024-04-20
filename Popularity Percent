@@ -1,0 +1,13 @@
+with cte as (select user1, user2 
+from facebook_friends 
+union all
+select user2, user1 
+from facebook_friends)
+
+select user1, round(num_friends*100/total_users, 2) as popularity_percent
+from 
+(select user1, count(user2) as num_friends, count(user1) over() as total_users
+from cte 
+where user1 <> user2
+group by user1
+order by user1) temp
