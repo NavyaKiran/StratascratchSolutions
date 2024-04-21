@@ -1,0 +1,17 @@
+with cte as (select date, sum(consumption) as total_energy
+from
+(select * from 
+fb_eu_energy
+union all 
+select * 
+from fb_asia_energy
+union all 
+select * 
+from fb_na_energy) temp 
+group by date)
+
+select date, total_energy 
+from 
+(select date, total_energy, dense_rank() over(order by total_energy desc) rn
+from cte) temp2 
+where rn = 1
