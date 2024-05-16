@@ -1,0 +1,13 @@
+with cte as (select user_name1 as user1, user_name2 as user2
+from friendships 
+union all 
+select user_name2, user_name1 
+from friendships)
+
+select date_liked, count(liked_post) as num_likes 
+from 
+(select user_posts.post_id as posted, user_posts.user_name as poster, likes.user_name as liker, likes.post_id as liked_post, dayname(date_liked), date_liked
+from user_posts inner join likes on user_posts.post_id = likes.post_id 
+where (user_posts.user_name, likes.user_name) in (select user1, user2 from cte where user1 <> user2) and dayname(date_liked) = 'Friday') temp
+group by date_liked
+ 
