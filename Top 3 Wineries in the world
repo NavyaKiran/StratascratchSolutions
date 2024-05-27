@@ -1,0 +1,11 @@
+with cte as (select winery, country, avg(points) as pts, 
+rank() over(partition by country order by avg(points) desc, winery) as rn
+from winemag_p1
+group by winery, country)
+
+select country, 
+max(case when rn = 1 then concat(winery, ' (', round(pts, 0), ') ') end) as top_winery, 
+coalesce(max(case when rn = 2 then concat(winery, ' (', round(pts, 0), ') ') end), "No second winery") as second_winery, 
+coalesce(max(case when rn = 3 then concat(winery, ' (', round(pts, 0), ') ') end), "No third winery") as third_winery
+from cte
+group by country
