@@ -1,0 +1,25 @@
+with d as (select user_id, session_id, day, count(step_id) 
+from google_fit_location
+group by user_id, session_id, day
+having count(step_id) > 1), 
+
+cte as (select google_fit_location.user_id, google_fit_location.session_id, google_fit_location.step_id, google_fit_location.latitude, google_fit_location.longitude, google_fit_location.day
+from google_fit_location inner join d on google_fit_location.user_id = d.user_id and google_fit_location.session_id = d.session_id and google_fit_location.day = d.day), 
+
+full_data as (select user_id, session_id, step_id, day, latitude, longitude, lead(latitude, 1) over(partition by session_id, day) as next_latitude, lead(longitude, 1) over(partition by session_id, day) as next_longitude
+from 
+(select user_id, session_id, step_id, day, latitude, longitude 
+from 
+(select user_id, session_id, step_id, latitude, longitude, day,
+min(step_id) over(partition by user_id, session_id, day) as first_step, 
+max(step_id) over(partition by user_id, session_id, day) as last_step
+from cte) temp
+where step_id = first_step or step_id = last_step) temp1)
+
+select avg(curvature_distance), avg(flat_distance), avg(curvature_distance) - avg(flat_distance) 
+from 
+(select session_id, day, step_id, 
+acos(sin(RADIANS(latitude)) * sin(radians(next_latitude)) + cos(RADIANS(latitude)) * cos(radians(next_latitude)) * cos(radians(next_longitude) - radians(longitude))) * 6371 as curvature_distance, 
+sqrt((next_latitude - latitude)*(next_latitude - latitude) + (next_longitude - longitude) * (next_longitude - longitude)) as flat_distance
+from full_data 
+where next_latitude is not null) temp4
